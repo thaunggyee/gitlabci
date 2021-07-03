@@ -1,0 +1,51 @@
+stages:
+  - build
+  - test
+  - deploy
+docker-build-dev-branch:
+  image: docker:latest
+  stage: build
+  services:
+    - name: docker:dind
+      alias: docker
+  variables:
+     DOCKER_USER: tho861998
+     CONTAINER_REGISTRY: docker.io    
+     DOCKER_PASSWORD: Th@ungHt!ke00
+  before_script: 
+    - echo "testing.........."
+  script:
+    - docker build -t "tho861998/catgitlabci:dev" .
+    - echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USER} --password-stdin ${CONTAINER_REGISTRY}
+    - docker images | grep tho861998/catgitlabci
+    - docker push tho861998/catgitlabci:dev
+  rules:
+    - if: $CI_COMMIT_REF_NAME != "main"
+
+testing_image:
+  image: tho861998/catgitlabci:dev
+  stage: test
+  script:
+    - echo "hello world" >test.yaml
+  rules:
+    - if: $CI_COMMIT_REF_NAME != "main"
+
+docker-build-master-branch:
+  image: docker:latest
+  stage: deploy
+  services:
+    - name: docker:dind
+      alias: docker
+  variables:
+     DOCKER_USER: tho861998
+     CONTAINER_REGISTRY: docker.io    
+     DOCKER_PASSWORD: Th@ungHt!ke00
+  before_script: 
+    - echo "testing.........."
+  script:
+    - docker build -t "tho861998/catgitlabci:latest" .
+    - echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USER} --password-stdin ${CONTAINER_REGISTRY}
+    - docker images | grep tho861998/catgitlabci
+    - docker push tho861998/catgitlabci:latest
+  rules:
+    - if: $CI_COMMIT_REF_NAME == "main"
